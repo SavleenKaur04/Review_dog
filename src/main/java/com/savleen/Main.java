@@ -4,4 +4,7 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Hello REVIEWDOG!");
     }
+    void MyMethod(){
+        int x= 586;
+    }
 }
