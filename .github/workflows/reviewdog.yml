@@ -34,8 +34,7 @@ jobs:
 
       - name: Run Checkstyle and Send Output to Reviewdog
         run: |
-          java -jar checkstyle-10.17.0-all.jar -c google_checks.xml . > checkstyle-report.xml || true
-          cat checkstyle-report.xml  # Debugging step
-          cat checkstyle-report.xml | reviewdog -name="checkstyle" -f="checkstyle" -reporter="github-pr-review"
+          java -jar checkstyle-10.17.0-all.jar -c google_checks.xml -f xml . 2>&1 | tee checkstyle-report.xml
+          cat checkstyle-report.xml | reviewdog -name="checkstyle" -f="checkstyle" -reporter="github-pr-review" -fail-on-error=false
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
