@@ -1,21 +1,43 @@
-name: Reviewdog CI
+name: Checkstyle with Reviewdog
 
 on: [pull_request]
 
+permissions:  
+  pull-requests: write  # ✅ This allows Reviewdog to post PR comments
+
 jobs:
   reviewdog:
-    name: Run Reviewdog
+    name: Run Checkstyle with Reviewdog
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Set Up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Install Reviewdog
         run: |
           curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b /usr/local/bin
 
-      - name: Run Linter and Reviewdog
+      - name: Install Latest Checkstyle
         run: |
-          echo "Run your linter here and pipe the output to Reviewdog"
+          curl -LJO https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.17.0/checkstyle-10.17.0-all.jar
+
+      - name: Verify Checkstyle Installation
+        run: |
+          java -jar checkstyle-10.17.0-all.jar --version
+
+      - name: Download Google Checkstyle Configuration
+        run: |
+          curl -o google_checks.xml https://raw.githubusercontent.com/checkstyle/checkstyle/checkstyle-10.17.0/src/main/resources/google_checks.xml
+
+      - name: Run Checkstyle and Send Output to Reviewdog
+        run: |
+          java -jar checkstyle-10.17.0-all.jar -c google_checks.xml -f xml . 2>&1 | tee checkstyle-report.xml
+          cat checkstyle-report.xml | reviewdog -name="checkstyle" -f="checkstyle" -reporter="github-pr-review" -fail-on-error=false
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
